@@ -1,5 +1,7 @@
 # Employee Attendance System
-
+# NAME : SHAIK ARSHIYA ANJUM
+# COLLEGE: MOHAN BABU UNIVERSITY
+# CONTACT: 9381776229 / arshiyaanjumshaik5@gmail.com
 ## Project Overview
 A full-stack attendance tracking application built with React, Node.js, and MongoDB. 
 It features role-based access for Employees (mark attendance, view history, apply for leave) and Managers (monitor live attendance, approve/reject leaves).
