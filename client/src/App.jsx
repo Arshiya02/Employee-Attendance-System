@@ -3,7 +3,7 @@ import './App.css';
 
 const App = () => {
   const [message, setMessage] = React.useState('Loading...');
-  const API_URL = 'https://employee-attendance-system-production.up.railway.app';
+  const API_URL = 'https://employee-attendance-system-production.up.railway.app/api';
   
   React.useEffect(() => {
     fetch(`${API_URL}/api/health`)
