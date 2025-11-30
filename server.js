@@ -33,7 +33,6 @@ const leaveSchema = new mongoose.Schema({
 const Leave = mongoose.model('Leave', leaveSchema);
 
 // --- HELPER: GET LOCAL DATE ---
-// This ensures the date saved is YOUR current date, not UTC
 const getLocalDate = () => {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
@@ -42,7 +41,7 @@ const getLocalDate = () => {
 
 // --- ROUTES ---
 
-// 1. REGISTER
+// 1. AUTH
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, role, department } = req.body;
@@ -54,7 +53,6 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// 2. LOGIN
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email, password });
@@ -62,16 +60,16 @@ app.post('/api/auth/login', async (req, res) => {
   else res.status(400).json({ message: 'Invalid credentials' });
 });
 
-// 3. CHECK IN (Fixed Time Logic)
+// 2. ATTENDANCE (Mark Attendance)
 app.post('/api/attendance/checkin', async (req, res) => {
   const { userId } = req.body;
-  const date = getLocalDate(); // Use Local Date
+  const date = getLocalDate();
   
   const existing = await Attendance.findOne({ userId, date });
-  if (existing) return res.status(400).json({ message: 'Already checked in' });
+  if (existing) return res.status(400).json({ message: 'Already checked in today' });
   
   const now = new Date();
-  // Late if after 9:30 AM
+  // Late logic: Late if after 9:30 AM
   const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 30);
   
   const newRecord = new Attendance({ userId, date, checkInTime: now, status: isLate ? 'late' : 'present' });
@@ -79,29 +77,27 @@ app.post('/api/attendance/checkin', async (req, res) => {
   res.json(newRecord);
 });
 
-// 4. GET ALL USERS (New: For Total Workforce Count)
+// 3. DATA FETCHING
 app.get('/api/users', async (req, res) => {
-  const users = await User.find().select('-password'); // Don't send passwords
+  const users = await User.find().select('-password');
   res.json(users);
 });
 
-// 5. GET ATTENDANCE (Manager)
 app.get('/api/attendance/all', async (req, res) => {
-  const all = await Attendance.find().populate('userId', 'name department email');
+  const all = await Attendance.find().populate('userId', 'name department email').sort({ date: -1 });
   res.json(all);
 });
 
-// 6. GET HISTORY (Employee)
 app.get('/api/attendance/:userId', async (req, res) => {
   const history = await Attendance.find({ userId: req.params.userId }).sort({ date: -1 });
   res.json(history);
 });
 
-// LEAVES
+// 4. LEAVES
 app.post('/api/leaves', async (req, res) => { await new Leave(req.body).save(); res.json({msg:"Saved"}); });
 app.get('/api/leaves', async (req, res) => {
   const filter = req.query.role === 'manager' ? {} : { userId: req.query.userId };
-  const leaves = await Leave.find(filter).populate('userId', 'name department');
+  const leaves = await Leave.find(filter).populate('userId', 'name department').sort({ _id: -1 });
   res.json(leaves);
 });
 app.put('/api/leaves/:id', async (req, res) => { await Leave.findByIdAndUpdate(req.params.id, {status: req.body.status}); res.json({msg:"Updated"}); });
