@@ -1,7 +1,6 @@
 {
   "name": "employee-attendance-system-client",
-  "version": "1.0.0",
-  "type": "module",
+"version": "1.0.1",  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
